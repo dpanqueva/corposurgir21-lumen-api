@@ -75,7 +75,19 @@ $router->delete('/central-image/{image}','CentralImageController@delete');
  * route company info
  */
 $router->get('/company-info','CompanyInfoController@index');
-$router->get('/company-info/{company}','CompanyInfoController@show');
+$router->get('/company-info/{infoCompanyId}','CompanyInfoController@show');
+$router->get('/company-info-feature/{infoCompanyId}','CompanyInfoController@showDetail');
 $router->post('/company-info','CompanyInfoController@create');
-$router->put('/company-info/{company}','CompanyInfoController@update');
-$router->delete('/company-info/{company}','CompanyInfoController@delete');
+$router->put('/company-info/{companyId}','CompanyInfoController@update');
+$router->delete('/company-info/{companyId}','CompanyInfoController@delete');
+
+
+
+/**
+ * route about info
+ */
+$router->get('/about-info','AboutController@index');
+$router->get('/about-info/{aboutId}','AboutController@show');
+$router->post('/about-info','AboutController@create');
+$router->put('/about-info/{aboutId}','AboutController@update');
+$router->delete('/about-info/{aboutId}','AboutController@delete');

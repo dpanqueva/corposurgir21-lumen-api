@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\SocialNetworkCompany;
 
 class CompanyInfo extends Model{
 
@@ -17,10 +18,16 @@ class CompanyInfo extends Model{
      * @var string[]
      */
     protected $fillable = [
-        'logo',
-        'posicion',
-        'informacion',
-        'nombre',
-        'snactivo'
+        'info_empresa_id',
+        'nombre_empresa',
+        'direccion',
+        'ciudad_pais',
+        'numero_fijo',
+        'numero_celular',
+        'correo'
     ];
+
+    public function caracteristicas(){
+        return $this->hasMany(SocialNetworkCompany::class,'info_empresa_id','info_empresa_id');
+      }
 }

@@ -27,11 +27,11 @@ class CompanyInfoController extends Controller{
      * @return Illuminate\Http\Response
      */
     public function index(){
-        //$CompanyInfoss = CompanyInfo::with('CompanyInfoDetail')->get();
-        $CompanyInfos = CompanyInfo::where('snactivo','S')->get();
+        //$companyInfoss = CompanyInfo::with('CompanyInfoDetail')->get();
+        $companyInfos = CompanyInfo::all();
     
                 
-        return $this->successResponse($CompanyInfos);
+        return $this->successResponse($companyInfos);
     }
 
     /**
@@ -47,8 +47,8 @@ class CompanyInfoController extends Controller{
             'logo'=>'required|max:100'
         ];
         $this->validate($request,$rules);
-        $CompanyInfos = CompanyInfo::create($request->all());
-        return $this->successResponse($CompanyInfos,Response::HTTP_CREATED);
+        $companyInfos = CompanyInfo::create($request->all());
+        return $this->successResponse($companyInfos,Response::HTTP_CREATED);
     }
 
     /**
@@ -56,10 +56,21 @@ class CompanyInfoController extends Controller{
      * @param CompanyInfo
      * @return Illuminate\Http\Response
      */
-    public function show($CompanyInfos){
+    public function show($infoCompanyId){
 
-        $CompanyInfos = CompanyInfo::findOrFail($CompanyInfos);
-        return $this->successResponse($CompanyInfos);
+        $infoCompanyId = CompanyInfo::findOrFail($infoCompanyId);
+        return $this->successResponse($infoCompanyId);
+    }
+
+      /**
+     * Show a category by id
+     * @param socialNet
+     * @return Illuminate\Http\Response
+     */
+    public function showDetail($infoCompanyId){
+
+        $infoCompanyId = CompanyInfo::findOrFail($infoCompanyId)->with('caracteristicas')->first();
+        return $this->successResponse($infoCompanyId);
     }
 
     /**
@@ -67,7 +78,7 @@ class CompanyInfoController extends Controller{
      * @param request
      * @return Illuminate\Http\Response
      */
-    public function update(Request $request,$CompanyInfos){
+    public function update(Request $request,$infoCompanyId){
         $rules = [
             'nombre'=>'max:50',
             'codigo'=>'max:20',
@@ -76,16 +87,16 @@ class CompanyInfoController extends Controller{
         ];
 
         $this->validate($request,$rules);
-        $CompanyInfos = CompanyInfo::findOrFail($CompanyInfos);
+        $infoCompanyId = CompanyInfo::findOrFail($infoCompanyId);
 
-        $CompanyInfos->fill($request->all());
-        if($CompanyInfos->isClean()){
+        $infoCompanyId->fill($request->all());
+        if($infoCompanyId->isClean()){
             return $this->errorResponse('At least one value must change'
                 ,Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $CompanyInfos->save();
-        return $this->successResponse($CompanyInfos);
+        $infoCompanyId->save();
+        return $this->successResponse($infoCompanyId);
     }
 
     /**
@@ -93,15 +104,15 @@ class CompanyInfoController extends Controller{
      * @param CompanyInfo
      * @return Illuminate\Http\Response
      */
-    public function delete($CompanyInfos){
+    public function delete($infoCompanyId){
 
-        $CompanyInfos = CompanyInfo::findOrFail($CompanyInfos);
+        $infoCompanyId = CompanyInfo::findOrFail($infoCompanyId);
 
-        // $CompanyInfos->delete();
+        // $companyInfos->delete();
 
-        $CompanyInfos->snactivo='N';
-        $CompanyInfos->save();
-        return $this->successResponse($CompanyInfos);
+        $infoCompanyId->snactivo='N';
+        $infoCompanyId->save();
+        return $this->successResponse($infoCompanyId);
     }
     
     
