@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\AllianceDetail;
+use App\Models\AllianceFeatures;
 
 class Alliance extends Model{
 
@@ -18,12 +18,17 @@ class Alliance extends Model{
      * @var string[]
      */
     protected $fillable = [
-        'descripcion',
-        'ruta_imagen',
-        'snactivo'
+        'alianza_id',
+		'nombre',
+		'descripcion',
+		'ruta_imagen',
+		'snactivo',
+		'pagina_web',
+		'direccion',
+		'barrio'
     ];
 
-    public function allianceDetail(){
-        return $this->hasMany(AllianceDetail::class,'alianza_id','alianza_id');
+    public function caracteristicas(){
+        return $this->hasMany(AllianceFeatures::class,'alianza_id','alianza_id');
       }
 }

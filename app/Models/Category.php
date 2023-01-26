@@ -22,9 +22,10 @@ class Category extends Model{
         'codigo',
         'snactivo',
         'logo',
+        'descripcion',
     ];
 
-    public function categoryDetail(){
-      return $this->hasMany(CategoryDetail::class,'categoria_id','categoria_id');
+    public function caracteristicas(){
+      return $this->hasMany(CategoryFeature::class,'categoria_id','categoria_id');
     }
 }

@@ -18,15 +18,28 @@
  */
 $router->get('/category','CategoryController@index');
 $router->get('/category/{category}','CategoryController@show');
+$router->get('/category-feature/{category}','CategoryController@showDetail');
 $router->post('/category','CategoryController@create');
 $router->put('/category/{category}','CategoryController@update');
 $router->delete('/category/{category}','CategoryController@delete');
+
+
+/**
+ * route category-detail
+ */
+$router->get('/category-detail','CategoryDetailController@index');
+$router->get('/category-detail/{category}','CategoryDetailController@show');
+$router->post('/category-detail','CategoryDetailController@create');
+$router->put('/category-detail/{category}','CategoryDetailController@update');
+$router->delete('/category-detail/{category}','CategoryDetailController@delete');
 
 /**
  * route alliance
  */
 $router->get('/alliance','AllianceController@index');
-$router->get('/alliance/{alliance}','AllianceController@show');
+$router->get('/alliance/{allianceId}','AllianceController@show');
+$router->get('/alliance-feature/{name}','AllianceController@showDetail');
+
 $router->post('/alliance','AllianceController@create');
 $router->put('/alliance/{alliance}','AllianceController@update');
 $router->delete('/alliance/{alliance}','AllianceController@delete');

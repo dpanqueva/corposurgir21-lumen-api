@@ -62,6 +62,18 @@ class CategoryController extends Controller{
         return $this->successResponse($category);
     }
 
+      /**
+     * Show a category by id
+     * @param category
+     * @return Illuminate\Http\Response
+     */
+    public function showDetail($category){
+
+        $category = Category::where('codigo',$category)->with('caracteristicas')->first();
+        return $this->successResponse($category);
+    }
+
+
     /**
      * Update the category
      * @param request

@@ -27,10 +27,7 @@ class AllianceController extends Controller{
      * @return Illuminate\Http\Response
      */
     public function index(){
-        //$alliancess = Alliance::with('allianceDetail')->get();
         $alliances = Alliance::where('snactivo','S')->get();
-    
-                
         return $this->successResponse($alliances);
     }
 
@@ -56,10 +53,21 @@ class AllianceController extends Controller{
      * @param Alliance
      * @return Illuminate\Http\Response
      */
-    public function show($alliances){
+    public function show($allianceId){
 
-        $alliances = Alliance::findOrFail($alliances);
-        return $this->successResponse($alliances);
+        $allianceId = Alliance::findOrFail($allianceId);
+        return $this->successResponse($allianceId);
+    }
+
+    /**
+     * Show a alliances by id
+     * @param alliances
+     * @return Illuminate\Http\Response
+     */
+    public function showDetail($name){
+
+        $name = Alliance::where('nombre',$name)->with('caracteristicas')->first();
+        return $this->successResponse($name);
     }
 
     /**
