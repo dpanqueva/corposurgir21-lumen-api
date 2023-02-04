@@ -12,6 +12,26 @@
 | and give it the Closure to call when that URI is requested.
 |
 */
+$router->get('/users','UsersController@index');
+$router->post('/users','UsersController@create');
+
+/*
+| User login
+*/
+$router->post('/users/login','LoginUsersController@login');
+$router->post('/users/logout','LoginUsersController@logout');
+
+/*
+ | auth middleware
+ |
+ */
+$router->group(['middleware'=>'auth'], function() use($router){
+    $router->get('/ruta',function() use($router){
+        return ["accediste"];
+    });
+});
+
+
 
 /**
  * route category
