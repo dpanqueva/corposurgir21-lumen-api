@@ -44,11 +44,11 @@ class CategoryController extends Controller{
                 'nombre'=>'required|max:50',
                 'codigo'=>'required|max:20',
                 'descripcion'=>'required',
-                'snactivo'=>'required|in:S,N',
                 'logo'=>'required|max:100'
             ];
             $this->validate($request,$rules);
             $category = Category::create($request->all());
+            
             return $this->successResponse($category,Response::HTTP_CREATED);
         }catch (ValidationException $ex ) { 
              return $this->errorResponse($ex->errors()
@@ -91,7 +91,6 @@ class CategoryController extends Controller{
                 'nombre'=>'required|max:50',
                 'codigo'=>'required|max:20',
                 'descripcion'=>'required',
-                'snactivo'=>'required|in:S,N',
                 'logo'=>'required|max:100'
             ];
 
