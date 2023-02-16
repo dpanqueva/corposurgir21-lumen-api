@@ -6,10 +6,13 @@ use App\Models\AboutInformation;
 use App\Traits\ApiResponser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-class AboutController extends Controller{
+class AboutController extends Controller
+{
 
-    use ApiResponser;    
+    use ApiResponser;
 
     /**
      * Create a new controller instance.
@@ -21,12 +24,12 @@ class AboutController extends Controller{
         //
     }
 
-
     /**
      * Return all information about company
      * @return Illuminate\Http\Response
      */
-    public function index(){
+    public function index()
+    {
         $aboutInformation = AboutInformation::all();
         return $this->successResponse($aboutInformation);
     }
@@ -36,16 +39,22 @@ class AboutController extends Controller{
      * @param request
      * @return Illuminate\Http\Response
      */
-    public function create(Request $request){
-        $rules = [
-            'nombre'=>'required|max:50',
-            'codigo'=>'required|max:20',
-            'snactivo'=>'required|in:S,N',
-            'logo'=>'required|max:100'
-        ];
-        $this->validate($request,$rules);
-        $aboutId = AboutInformation::create($request->all());
-        return $this->successResponse($aboutId,Response::HTTP_CREATED);
+    public function create(Request $request)
+    {
+        try {
+            $rules = [
+                'titulo' => 'required',
+                'descripcion' => 'required',
+                'logo' => 'required'
+            ];
+            $this->validate($request, $rules);
+            $aboutId = AboutInformation::create($request->all());
+        } catch (ValidationException $ex) {
+            return $this->errorResponse(
+                $ex->errors(),
+                Response::HTTP_BAD_REQUEST
+            );
+        }
     }
 
     /**
@@ -53,7 +62,8 @@ class AboutController extends Controller{
      * @param aboutId
      * @return Illuminate\Http\Response
      */
-    public function show($aboutId){
+    public function show($aboutId)
+    {
 
         $aboutId = AboutInformation::findOrFail($aboutId);
         return $this->successResponse($aboutId);
@@ -65,40 +75,47 @@ class AboutController extends Controller{
      * @param aboutId
      * @return Illuminate\Http\Response
      */
-    public function update(Request $request,$aboutId){
+    public function update(Request $request, $aboutId)
+    {
         $rules = [
-            'nombre'=>'max:50',
-            'codigo'=>'max:20',
-            'snactivo'=>'in:S,N',
-            'logo'=>'max:100'
+            'nombre' => 'max:50',
+            'codigo' => 'max:20',
+            'snactivo' => 'in:S,N',
+            'logo' => 'max:100'
         ];
 
-        $this->validate($request,$rules);
+        $this->validate($request, $rules);
         $aboutId = AboutInformation::findOrFail($aboutId);
 
         $aboutId->fill($request->all());
-        if($aboutId->isClean()){
-            return $this->errorResponse('At least one value must change'
-                ,Response::HTTP_UNPROCESSABLE_ENTITY);
+        if ($aboutId->isClean()) {
+            return $this->errorResponse(
+                'At least one value must change',
+                Response::HTTP_UNPROCESSABLE_ENTITY
+            );
         }
 
         $aboutId->save();
         return $this->successResponse($aboutId);
     }
 
+
     /**
-     * Delete a About
-     * @param aboutId
+     * Delete a category
+     * @param about
      * @return Illuminate\Http\Response
      */
     public function delete($aboutId){
-
-        $aboutId = AboutInformation::findOrFail($aboutId);
-
-        // $aboutId->delete();
-
-        $aboutId->snactivo='N';
-        $aboutId->save();
-        return $this->successResponse($aboutId);
+        try{
+            $about = AboutInformation::findOrFail($aboutId);
+            $about->delete();
+            return $this->successResponse($about);
+        }catch (ValidationException $ex ) {       
+            return $this->errorResponse($ex->errors()
+            ,Response::HTTP_BAD_REQUEST);
+        }catch(ModelNotFoundException $e){
+            return $this->errorResponse('Not found data with parameter '.$about 
+            ,Response::HTTP_NOT_FOUND);
+        }
     }
 }

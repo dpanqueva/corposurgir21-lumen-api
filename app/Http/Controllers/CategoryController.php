@@ -6,6 +6,8 @@ use App\Models\Category;
 use App\Traits\ApiResponser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class CategoryController extends Controller{
 
@@ -27,10 +29,7 @@ class CategoryController extends Controller{
      * @return Illuminate\Http\Response
      */
     public function index(){
-        //$categories = Category::with('categoryDetail')->get();
         $categories = Category::where('snactivo','S')->get();
-    
-                
         return $this->successResponse($categories);
     }
 
@@ -40,15 +39,22 @@ class CategoryController extends Controller{
      * @return Illuminate\Http\Response
      */
     public function create(Request $request){
-        $rules = [
-            'nombre'=>'required|max:50',
-            'codigo'=>'required|max:20',
-            'snactivo'=>'required|in:S,N',
-            'logo'=>'required|max:100'
-        ];
-        $this->validate($request,$rules);
-        $category = Category::create($request->all());
-        return $this->successResponse($category,Response::HTTP_CREATED);
+        try{
+            $rules = [
+                'nombre'=>'required|max:50',
+                'codigo'=>'required|max:20',
+                'descripcion'=>'required',
+                'snactivo'=>'required|in:S,N',
+                'logo'=>'required|max:100'
+            ];
+            $this->validate($request,$rules);
+            $category = Category::create($request->all());
+            return $this->successResponse($category,Response::HTTP_CREATED);
+        }catch (ValidationException $ex ) { 
+             return $this->errorResponse($ex->errors()
+                ,Response::HTTP_BAD_REQUEST);
+        }
+        
     }
 
     /**
@@ -58,7 +64,7 @@ class CategoryController extends Controller{
      */
     public function show($category){
 
-        $category = Category::findOrFail($category);
+        $category = Category::where('codigo',$category)->first();
         return $this->successResponse($category);
     }
 
@@ -80,23 +86,29 @@ class CategoryController extends Controller{
      * @return Illuminate\Http\Response
      */
     public function update(Request $request,$category){
-        $rules = [
-            'nombre'=>'max:50',
-            'codigo'=>'max:20',
-            'snactivo'=>'in:S,N',
-            'logo'=>'max:100'
-        ];
+        try{
+            $rules = [
+                'nombre'=>'required|max:50',
+                'codigo'=>'required|max:20',
+                'descripcion'=>'required',
+                'snactivo'=>'required|in:S,N',
+                'logo'=>'required|max:100'
+            ];
 
-        $this->validate($request,$rules);
-        $category = Category::findOrFail($category);
+            $this->validate($request,$rules);
+            $category = Category::findOrFail($category);
 
-        $category->fill($request->all());
-        if($category->isClean()){
-            return $this->errorResponse('At least one value must change'
-                ,Response::HTTP_UNPROCESSABLE_ENTITY);
+            $category->fill($request->all());
+            if($category->isClean()){
+                return $this->errorResponse('At least one value must change'
+                    ,Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $category->save();
+        }catch (ValidationException $ex ) {       
+            return $this->errorResponse($ex->errors()
+            ,Response::HTTP_BAD_REQUEST);
         }
-
-        $category->save();
         return $this->successResponse($category);
     }
 
@@ -106,13 +118,16 @@ class CategoryController extends Controller{
      * @return Illuminate\Http\Response
      */
     public function delete($category){
-
-        $category = Category::findOrFail($category);
-
-        // $category->delete();
-
-        $category->snactivo='N';
-        $category->save();
-        return $this->successResponse($category);
+        try{
+            $category = Category::findOrFail($category);
+            $category->delete();
+            return $this->successResponse($category);
+        }catch (ValidationException $ex ) {       
+            return $this->errorResponse($ex->errors()
+            ,Response::HTTP_BAD_REQUEST);
+        }catch(ModelNotFoundException $e){
+            return $this->errorResponse('Not found data with parameter '.$category 
+            ,Response::HTTP_NOT_FOUND);
+        }
     }
 }

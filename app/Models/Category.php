@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\CategoryDetail;
+use App\Models\CategoryFeature;
 
 class Category extends Model{
 

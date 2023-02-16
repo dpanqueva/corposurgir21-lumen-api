@@ -6,10 +6,13 @@ use App\Models\CompanyInfo;
 use App\Traits\ApiResponser;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-class CompanyInfoController extends Controller{
+class CompanyInfoController extends Controller
+{
 
-    use ApiResponser;    
+    use ApiResponser;
 
     /**
      * Create a new controller instance.
@@ -26,11 +29,12 @@ class CompanyInfoController extends Controller{
      * Return all CompanyInfos
      * @return Illuminate\Http\Response
      */
-    public function index(){
+    public function index()
+    {
         //$companyInfoss = CompanyInfo::with('CompanyInfoDetail')->get();
         $companyInfos = CompanyInfo::all();
-    
-                
+
+
         return $this->successResponse($companyInfos);
     }
 
@@ -39,16 +43,27 @@ class CompanyInfoController extends Controller{
      * @param request
      * @return Illuminate\Http\Response
      */
-    public function create(Request $request){
-        $rules = [
-            'nombre'=>'required|max:50',
-            'codigo'=>'required|max:20',
-            'snactivo'=>'required|in:S,N',
-            'logo'=>'required|max:100'
-        ];
-        $this->validate($request,$rules);
-        $companyInfos = CompanyInfo::create($request->all());
-        return $this->successResponse($companyInfos,Response::HTTP_CREATED);
+    public function create(Request $request)
+    {
+        try {
+            $rules = [
+                'nombre_empresa' => 'required',
+                'direccion' => 'required',
+                'ciudad_pais' => 'required',
+                'numero_fijo' => 'required',
+                'numero_celular' => 'required',
+                'correo' => 'required'
+            ];
+            $this->validate($request, $rules);
+            $companyInfos = CompanyInfo::create($request->all());
+        } catch (ValidationException $ex) {
+            return $this->errorResponse(
+                $ex->errors(),
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        return $this->successResponse($companyInfos, Response::HTTP_CREATED);
     }
 
     /**
@@ -56,18 +71,20 @@ class CompanyInfoController extends Controller{
      * @param CompanyInfo
      * @return Illuminate\Http\Response
      */
-    public function show($infoCompanyId){
+    public function show($infoCompanyId)
+    {
 
         $infoCompanyId = CompanyInfo::findOrFail($infoCompanyId);
         return $this->successResponse($infoCompanyId);
     }
 
-      /**
+    /**
      * Show a category by id
      * @param socialNet
      * @return Illuminate\Http\Response
      */
-    public function showDetail($infoCompanyId){
+    public function showDetail($infoCompanyId)
+    {
 
         $infoCompanyId = CompanyInfo::findOrFail($infoCompanyId)->with('caracteristicas')->first();
         return $this->successResponse($infoCompanyId);
@@ -78,25 +95,42 @@ class CompanyInfoController extends Controller{
      * @param request
      * @return Illuminate\Http\Response
      */
-    public function update(Request $request,$infoCompanyId){
-        $rules = [
-            'nombre'=>'max:50',
-            'codigo'=>'max:20',
-            'snactivo'=>'in:S,N',
-            'logo'=>'max:100'
-        ];
+    public function update(Request $request, $companyId)
+    {
+        try {
+            $rules = [
+                'nombre_empresa' => 'required',
+                'direccion' => 'required',
+                'ciudad_pais' => 'required',
+                'numero_fijo' => 'required',
+                'numero_celular' => 'required',
+                'correo' => 'required'
+            ];
 
-        $this->validate($request,$rules);
-        $infoCompanyId = CompanyInfo::findOrFail($infoCompanyId);
+            $this->validate($request, $rules);
+            $infoCompanyId = CompanyInfo::findOrFail($companyId);
 
-        $infoCompanyId->fill($request->all());
-        if($infoCompanyId->isClean()){
-            return $this->errorResponse('At least one value must change'
-                ,Response::HTTP_UNPROCESSABLE_ENTITY);
+            $infoCompanyId->fill($request->all());
+            if ($infoCompanyId->isClean()) {
+                return $this->errorResponse(
+                    'At least one value must change',
+                    Response::HTTP_UNPROCESSABLE_ENTITY
+                );
+            }
+
+            $infoCompanyId->save();
+            return $this->successResponse($infoCompanyId);
+        } catch (ValidationException $ex) {
+            return $this->errorResponse(
+                $ex->errors(),
+                Response::HTTP_BAD_REQUEST
+            );
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse(
+                'Not found data with parameter ' . $infoCompanyId,
+                Response::HTTP_NOT_FOUND
+            );
         }
-
-        $infoCompanyId->save();
-        return $this->successResponse($infoCompanyId);
     }
 
     /**
@@ -104,18 +138,23 @@ class CompanyInfoController extends Controller{
      * @param CompanyInfo
      * @return Illuminate\Http\Response
      */
-    public function delete($infoCompanyId){
+    public function delete($companyId)
+    {
+        try {
+            $infoCompanyId = CompanyInfo::findOrFail($companyId);
 
-        $infoCompanyId = CompanyInfo::findOrFail($infoCompanyId);
-
-        // $companyInfos->delete();
-
-        $infoCompanyId->snactivo='N';
-        $infoCompanyId->save();
-        return $this->successResponse($infoCompanyId);
+            $infoCompanyId->delete();
+            return $this->successResponse($infoCompanyId);
+        } catch (ValidationException $ex) {
+            return $this->errorResponse(
+                $ex->errors(),
+                Response::HTTP_BAD_REQUEST
+            );
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse(
+                'Not found data with parameter ' . $infoCompanyId,
+                Response::HTTP_NOT_FOUND
+            );
+        }
     }
-    
-    
-    
-
 }

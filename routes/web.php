@@ -29,6 +29,39 @@ $router->group(['middleware'=>'auth'], function() use($router){
     $router->get('/ruta',function() use($router){
         return ["accediste"];
     });
+
+    /*
+    * route category
+    */
+    $router->get('/category/{category}','CategoryController@show');
+    $router->post('/category','CategoryController@create');
+    $router->put('/category/{category}','CategoryController@update');
+    $router->delete('/category/{category}','CategoryController@delete');
+
+    /**
+    * route category-feature
+    */
+    $router->post('/category-feature','CategoryFeatureController@create');
+    $router->put('/category-feature/{featureId}','CategoryFeatureController@update');
+    $router->delete('/category-feature/{featureObj}','CategoryFeatureController@delete');
+
+    /**
+     * route about info
+     */
+    $router->get('/about-info/{aboutId}','AboutController@show');
+    $router->post('/about-info','AboutController@create');    
+    $router->put('/about-info/{aboutId}','AboutController@update');
+    $router->delete('/about-info/{aboutId}','AboutController@delete');
+
+    /**
+     * route company info
+     */
+    $router->get('/company-info/{infoCompanyId}','CompanyInfoController@show');
+    $router->post('/company-info','CompanyInfoController@create');
+    $router->put('/company-info/{companyId}','CompanyInfoController@update');
+    $router->delete('/company-info/{companyId}','CompanyInfoController@delete');
+
+
 });
 
 
@@ -37,21 +70,16 @@ $router->group(['middleware'=>'auth'], function() use($router){
  * route category
  */
 $router->get('/category','CategoryController@index');
-$router->get('/category/{category}','CategoryController@show');
 $router->get('/category-feature/{category}','CategoryController@showDetail');
-$router->post('/category','CategoryController@create');
-$router->put('/category/{category}','CategoryController@update');
-$router->delete('/category/{category}','CategoryController@delete');
+
 
 
 /**
- * route category-detail
+ * route category-feature
  */
-$router->get('/category-detail','CategoryDetailController@index');
-$router->get('/category-detail/{category}','CategoryDetailController@show');
-$router->post('/category-detail','CategoryDetailController@create');
-$router->put('/category-detail/{category}','CategoryDetailController@update');
-$router->delete('/category-detail/{category}','CategoryDetailController@delete');
+$router->get('/category-feature','CategoryFeatureController@index');
+$router->get('/category-feature-detail/{featureId}','CategoryFeatureController@show');
+
 
 /**
  * route alliance
@@ -95,19 +123,10 @@ $router->delete('/central-image/{image}','CentralImageController@delete');
  * route company info
  */
 $router->get('/company-info','CompanyInfoController@index');
-$router->get('/company-info/{infoCompanyId}','CompanyInfoController@show');
 $router->get('/company-info-feature/{infoCompanyId}','CompanyInfoController@showDetail');
-$router->post('/company-info','CompanyInfoController@create');
-$router->put('/company-info/{companyId}','CompanyInfoController@update');
-$router->delete('/company-info/{companyId}','CompanyInfoController@delete');
-
 
 
 /**
  * route about info
  */
 $router->get('/about-info','AboutController@index');
-$router->get('/about-info/{aboutId}','AboutController@show');
-$router->post('/about-info','AboutController@create');
-$router->put('/about-info/{aboutId}','AboutController@update');
-$router->delete('/about-info/{aboutId}','AboutController@delete');
