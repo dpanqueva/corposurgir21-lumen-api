@@ -10,7 +10,7 @@ use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-class ContactanosController extends Controller
+class ContactsController extends Controller
 {
 
     use ApiResponser;
@@ -35,7 +35,9 @@ class ContactanosController extends Controller
     {
         try {
             $this->validate($request, $this->rules());
-            return $this->successResponse(Contact::create($request->all()), Response::HTTP_CREATED);
+            $contact = Contact::create($request->all());
+            $mail = $this->sendEmail($contact);
+            return $this->successResponse($contact, Response::HTTP_CREATED);
         } catch (ValidationException $ex) {
             return $this->errorResponse(
                 $ex->errors(),
@@ -91,7 +93,7 @@ class ContactanosController extends Controller
                 'Not found data with parameter ' . $ContactId,
                 Response::HTTP_NOT_FOUND
             );
-        }catch (Exception $ex) {
+        } catch (Exception $ex) {
             return $this->errorResponse(
                 'An unexpected error has occurred',
                 Response::HTTP_INTERNAL_SERVER_ERROR
@@ -110,7 +112,7 @@ class ContactanosController extends Controller
                 'Not found data with parameter ' . $ContactId,
                 Response::HTTP_NOT_FOUND
             );
-        }catch (Exception $ex) {
+        } catch (Exception $ex) {
             return $this->errorResponse(
                 'An unexpected error has occurred',
                 Response::HTTP_INTERNAL_SERVER_ERROR
@@ -126,5 +128,28 @@ class ContactanosController extends Controller
             'tipo_contacto' => 'required',
             'mensaje' => 'required'
         ];
+    }
+
+    private function sendEmail($contact)
+    {
+        try {
+
+            $to      = 'servicioalcliente@corposurgir21.org';
+            $subject = $contact->tipo_contacto;
+            $message = $contact->mensaje . "\r\n";
+            $message .= "Número de contacto: " . $contact->numero_contacto . "\r\n";
+            $message .= "Correo de contacto: " . $contact->correo . "\r\n";
+            $headers = 'From: noreply@corposurgir21.org' . "\r\n" .
+                'Reply-To: noreply@corposurgir21.org' . "\r\n" .
+                'X-Mailer: PHP/' . phpversion() . "\r\n" .
+                'Content-type: text/html; charset=utf-8';
+
+            return mail($to, $subject, $message, $headers);
+        } catch (Exception $ex) {
+            return $this->errorResponse(
+                'An unexpected error has occurred sending email: ' . $ex,
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 }
