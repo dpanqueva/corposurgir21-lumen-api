@@ -151,4 +151,4 @@ $router->get('/donation', 'DonationController@index');
 /**
  * route contact
  */
-$router->post('/contact', 'ContactanosController@create');
+$router->post('/contact', 'ContactsController@create');
