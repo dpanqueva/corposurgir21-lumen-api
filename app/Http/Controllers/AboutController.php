@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AboutInformation;
 use App\Traits\ApiResponser;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
@@ -14,108 +15,114 @@ class AboutController extends Controller
 
     use ApiResponser;
 
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
-        //
     }
 
-    /**
-     * Return all information about company
-     * @return Illuminate\Http\Response
-     */
     public function index()
     {
-        $aboutInformation = AboutInformation::all();
-        return $this->successResponse($aboutInformation);
+        try {
+            return $this->successResponse(AboutInformation::all());
+        } catch (Exception $ex) {
+            return $this->errorResponse(
+                'An unexpected error has occurred',
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
-    /**
-     * Create a new About
-     * @param request
-     * @return Illuminate\Http\Response
-     */
     public function create(Request $request)
     {
         try {
-            $rules = [
-                'titulo' => 'required',
-                'descripcion' => 'required',
-                'logo' => 'required'
-            ];
-            $this->validate($request, $rules);
-            $aboutId = AboutInformation::create($request->all());
+            $this->validate($request, $this->rules());
+            return $this->successResponse(AboutInformation::create($request->all()), Response::HTTP_CREATED);
         } catch (ValidationException $ex) {
             return $this->errorResponse(
                 $ex->errors(),
                 Response::HTTP_BAD_REQUEST
             );
-        }
-    }
-
-    /**
-     * Show a About by id
-     * @param aboutId
-     * @return Illuminate\Http\Response
-     */
-    public function show($aboutId)
-    {
-
-        $aboutId = AboutInformation::findOrFail($aboutId);
-        return $this->successResponse($aboutId);
-    }
-
-    /**
-     * Update the About
-     * @param request
-     * @param aboutId
-     * @return Illuminate\Http\Response
-     */
-    public function update(Request $request, $aboutId)
-    {
-        $rules = [
-            'nombre' => 'max:50',
-            'codigo' => 'max:20',
-            'snactivo' => 'in:S,N',
-            'logo' => 'max:100'
-        ];
-
-        $this->validate($request, $rules);
-        $aboutId = AboutInformation::findOrFail($aboutId);
-
-        $aboutId->fill($request->all());
-        if ($aboutId->isClean()) {
+        } catch (Exception $ex) {
             return $this->errorResponse(
-                'At least one value must change',
-                Response::HTTP_UNPROCESSABLE_ENTITY
+                'An unexpected error has occurred',
+                Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }
-
-        $aboutId->save();
-        return $this->successResponse($aboutId);
     }
 
+    public function show($aboutId)
+    {
+        try {
+            return $this->successResponse(AboutInformation::findOrFail($aboutId));
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse(
+                'Not found data with parameter ' . $aboutId,
+                Response::HTTP_NOT_FOUND
+            );
+        } catch (Exception $ex) {
+            return $this->errorResponse(
+                'An unexpected error has occurred',
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 
-    /**
-     * Delete a category
-     * @param about
-     * @return Illuminate\Http\Response
-     */
-    public function delete($aboutId){
-        try{
+    public function update(Request $request, $aboutId)
+    {
+        try {
+            $this->validate($request, $this->rules());
+            $about = AboutInformation::findOrFail($aboutId);
+            $about->fill($request->all());
+            if ($about->isClean()) {
+                return $this->errorResponse(
+                    'At least one value must change',
+                    Response::HTTP_UNPROCESSABLE_ENTITY
+                );
+            }
+            $about->save();
+            return $this->successResponse($about);
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse(
+                'Not found data with parameter ' . $aboutId,
+                Response::HTTP_NOT_FOUND
+            );
+        } catch (ValidationException $ex) {
+            return $this->errorResponse(
+                $ex->errors(),
+                Response::HTTP_BAD_REQUEST
+            );
+        } catch (Exception $ex) {
+            return $this->errorResponse(
+                'An unexpected error has occurred',
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    public function delete($aboutId)
+    {
+        try {
             $about = AboutInformation::findOrFail($aboutId);
             $about->delete();
             return $this->successResponse($about);
-        }catch (ValidationException $ex ) {       
-            return $this->errorResponse($ex->errors()
-            ,Response::HTTP_BAD_REQUEST);
-        }catch(ModelNotFoundException $e){
-            return $this->errorResponse('Not found data with parameter '.$about 
-            ,Response::HTTP_NOT_FOUND);
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse(
+                'Not found data with parameter ' . $aboutId,
+                Response::HTTP_NOT_FOUND
+            );
+        }catch (Exception $ex) {
+            return $this->errorResponse(
+                'An unexpected error has occurred',
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
+    }
+
+    private function rules()
+    {
+        return [
+            'titulo' => 'required',
+            'descripcion' => 'required',
+            'logo' => 'required'
+        ];
     }
 }

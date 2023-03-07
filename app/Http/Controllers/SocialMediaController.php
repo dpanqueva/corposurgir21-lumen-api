@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Category;
+use App\Models\SocialNetworkCompany;
 use App\Traits\ApiResponser;
 use Exception;
 use Illuminate\Http\Request;
@@ -10,8 +10,9 @@ use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
-class CategoryController extends Controller
+class SocialMediaController extends Controller
 {
+
     use ApiResponser;
 
     public function __construct()
@@ -21,7 +22,7 @@ class CategoryController extends Controller
     public function index()
     {
         try {
-            return $this->successResponse(Category::all());
+            return $this->successResponse(SocialNetworkCompany::all());
         } catch (Exception $ex) {
             return $this->errorResponse(
                 'An unexpected error has occurred',
@@ -34,7 +35,7 @@ class CategoryController extends Controller
     {
         try {
             $this->validate($request, $this->rules());
-            return $this->successResponse(Category::create($request->all()), Response::HTTP_CREATED);
+            return $this->successResponse(SocialNetworkCompany::create($request->all()), Response::HTTP_CREATED);
         } catch (ValidationException $ex) {
             return $this->errorResponse(
                 $ex->errors(),
@@ -48,13 +49,13 @@ class CategoryController extends Controller
         }
     }
 
-    public function show($category)
+    public function show($socialMediaId)
     {
         try {
-            return $this->successResponse(Category::where('codigo', $category)->first());
+            return $this->successResponse(SocialNetworkCompany::findOrFail($socialMediaId));
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse(
-                'Not found data with parameter ' . $category,
+                'Not found data with parameter ' . $socialMediaId,
                 Response::HTTP_NOT_FOUND
             );
         } catch (Exception $ex) {
@@ -65,37 +66,21 @@ class CategoryController extends Controller
         }
     }
 
-    public function showDetail($category)
-    {
-        try {
-            return $this->successResponse(Category::where('codigo', $category)->with('caracteristicas')->first());
-        } catch (ModelNotFoundException $e) {
-            return $this->errorResponse(
-                'Not found data with parameter ' . $category,
-                Response::HTTP_NOT_FOUND
-            );
-        } catch (Exception $ex) {
-            return $this->errorResponse(
-                'An unexpected error has occurred',
-                Response::HTTP_INTERNAL_SERVER_ERROR
-            );
-        }
-    }
-
-    public function update(Request $request, $category)
+    public function update(Request $request, $socialMediaId)
     {
         try {
             $this->validate($request, $this->rules());
-            $category = Category::findOrFail($category);
-            $category->fill($request->all());
-            if ($category->isClean()) {
+            $socialMedia = SocialNetworkCompany::findOrFail($socialMediaId);
+            $socialMedia->fill($request->all());
+            if ($socialMedia->isClean()) {
                 return $this->errorResponse(
                     'At least one value must change',
                     Response::HTTP_UNPROCESSABLE_ENTITY
                 );
             }
-            $category->save();
-            return $this->successResponse($category);
+
+            $socialMedia->save();
+            return $this->successResponse($socialMedia);
         } catch (ValidationException $ex) {
             return $this->errorResponse(
                 $ex->errors(),
@@ -103,10 +88,10 @@ class CategoryController extends Controller
             );
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse(
-                'Not found data with parameter ' . $category,
+                'Not found data with parameter ' . $socialMediaId,
                 Response::HTTP_NOT_FOUND
             );
-        } catch (Exception $ex) {
+        }catch (Exception $ex) {
             return $this->errorResponse(
                 'An unexpected error has occurred',
                 Response::HTTP_INTERNAL_SERVER_ERROR
@@ -114,18 +99,18 @@ class CategoryController extends Controller
         }
     }
 
-    public function delete($category)
+    public function delete($socialMediaId)
     {
         try {
-            $category = Category::findOrFail($category);
-            $category->delete();
-            return $this->successResponse($category);
+            $socialMedia = SocialNetworkCompany::findOrFail($socialMediaId);
+            $socialMedia->delete();
+            return $this->successResponse($socialMedia);
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse(
-                'Not found data with parameter ' . $category,
+                'Not found data with parameter ' . $socialMediaId,
                 Response::HTTP_NOT_FOUND
             );
-        } catch (Exception $ex) {
+        }catch (Exception $ex) {
             return $this->errorResponse(
                 'An unexpected error has occurred',
                 Response::HTTP_INTERNAL_SERVER_ERROR
@@ -136,10 +121,10 @@ class CategoryController extends Controller
     private function rules()
     {
         return [
-            'nombre' => 'required|max:50',
-            'codigo' => 'required|max:20',
-            'descripcion' => 'required',
-            'logo' => 'required|max:100'
+            'nombre' => 'required',
+            'url_red_social' => 'required',
+            'logo' => 'required',
+            'info_empresa_id' => 'required'
         ];
     }
 }

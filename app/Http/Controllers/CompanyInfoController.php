@@ -85,7 +85,6 @@ class CompanyInfoController extends Controller
      */
     public function showDetail($infoCompanyId)
     {
-
         $infoCompanyId = CompanyInfo::findOrFail($infoCompanyId)->with('caracteristicas')->first();
         return $this->successResponse($infoCompanyId);
     }

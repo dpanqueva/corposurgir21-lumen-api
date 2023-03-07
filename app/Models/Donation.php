@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Menu extends Model{
 
-    public $table = 'menu';
-    public $primaryKey='menu_id';
+class Donation extends Model{
+
+    public $table = 'donacion';
+    public $primaryKey='donacion_id';
 
     public $timestamps = false;
 
@@ -17,8 +18,11 @@ class Menu extends Model{
      * @var string[]
      */
     protected $fillable = [
-        'nombre',
-        'snactivo'
+        'donacion_id',
+		'banco_entidad',
+        'tipo_cuenta',
+		'numero_cuenta',
+		'logo'
     ];
 
 }
