@@ -482,6 +482,13 @@ ALTER TABLE `categoria_caracteristica`
 --
 ALTER TABLE `redes_sociales_empresa`
   ADD CONSTRAINT `fk_redes_sociales_empresa_informacion_empresa1` FOREIGN KEY (`info_empresa_id`) REFERENCES `informacion_empresa` (`info_empresa_id`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+  
+CREATE INDEX ix_alianza_nombre ON alianza(nombre);
+CREATE INDEX ix_alianza_detalle ON alianza_caracteristica(alianza_id,codigo_nombre);
+CREATE INDEX ix_alianza_detalle_codigo_nombre ON alianza_caracteristica(codigo_nombre);
+CREATE INDEX ix_categoria_codigo ON categoria(codigo);
+CREATE INDEX ix_usuario_correo ON usuarios(correo);
+CREATE INDEX ix_usuario_token ON usuarios(api_token);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
