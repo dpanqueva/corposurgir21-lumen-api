@@ -9,6 +9,14 @@ use Illuminate\Http\JsonResponse;
 
 class CorsMiddleware
 {
+ /**
+     * Dominios permitidos para acceder a la API
+     */
+    private array $allowedOrigins = [
+        'https://www.corposurgir21.org',
+        'https://corposurgir21.org',
+    ];
+
     /**
      * Handle an incoming request.
      *
@@ -16,33 +24,51 @@ class CorsMiddleware
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle(Request $request, Closure $next)
+    public function handle($request, Closure $next)
     {
-        // Manejar preflight OPTIONS request
-        if ($request->isMethod('OPTIONS')) {
-            return $this->setCorsHeaders(response()->json(['method' => 'OPTIONS'], 200));
+        // Permitir localhost en desarrollo
+        if (env('APP_ENV') === 'local' || env('APP_ENV') === 'development') {
+            $this->allowedOrigins[] = 'http://localhost:3000';
+            $this->allowedOrigins[] = 'http://localhost:8080';
+            $this->allowedOrigins[] = 'http://localhost:5173';
+            $this->allowedOrigins[] = 'http://127.0.0.1:3000';
+            $this->allowedOrigins[] = 'http://127.0.0.1:8080';
+            $this->allowedOrigins[] = 'http://127.0.0.1:5173';
         }
 
-        // Continuar con la request normal y añadir headers CORS
-        $response = $next($request);
+        $origin = $request->header('Origin');
         
-        return $this->setCorsHeaders($response);
-    }
+        // Verificar si el origen está permitido
+        $allowedOrigin = in_array($origin, $this->allowedOrigins) ? $origin : null;
 
-    /**
-     * Set CORS headers on response
-     *
-     * @param  mixed  $response
-     * @return mixed
-     */
-    protected function setCorsHeaders($response)
-    {
-        $response->header('Access-Control-Allow-Origin', '*')
-                 ->header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT, DELETE')
-                 ->header('Access-Control-Allow-Credentials', 'true')
-                 ->header('Access-Control-Max-Age', '86400')
-                 ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+        // Si no hay origen permitido y no es local, usar el primero como fallback
+        if (!$allowedOrigin && (env('APP_ENV') === 'local' || env('APP_ENV') === 'development')) {
+            $allowedOrigin = $origin ?: '*';
+        }
+
+        // Manejar preflight OPTIONS request ANTES de continuar
+        if ($request->isMethod('OPTIONS')) {
+            return response('', 200)
+                ->header('Access-Control-Allow-Origin', $allowedOrigin ?: '')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, X-CSRF-Token')
+                ->header('Access-Control-Allow-Credentials', 'true')
+                ->header('Access-Control-Max-Age', '86400');
+        }
+
+        // Continuar con la petición normal
+        $response = $next($request);
+
+        // Aplicar headers CORS a la respuesta
+        if ($allowedOrigin) {
+            $response->header('Access-Control-Allow-Origin', $allowedOrigin);
+        }
         
+        $response->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        $response->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, X-CSRF-Token');
+        $response->header('Access-Control-Allow-Credentials', 'true');
+        $response->header('Access-Control-Max-Age', '86400');
+
         return $response;
     }
 }

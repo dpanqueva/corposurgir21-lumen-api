@@ -1,3 +1,6 @@
+-- bd corposurgir21
+-- u corposurgir21
+-- pass C0rposurg1R21@2023
 -- phpMyAdmin SQL Dump
 -- version 5.2.0
 -- https://www.phpmyadmin.net/
