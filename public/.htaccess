@@ -1,21 +1,233 @@
+# ============================================================================
+# .htaccess - API Lumen (CorpoSurgir21)
+# Ubicación: /corposurgir21-api/public/.htaccess
+# Última actualización: 2026
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 1. CONFIGURACIÓN BÁSICA DE REESCRITURA (Tu código original mejorado)
+# ----------------------------------------------------------------------------
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
 
     RewriteEngine On
+    RewriteBase /
 
-    # Handle Authorization Header
+    # ----------------------------------------------------------------------------
+    # 2. FORZAR HTTPS (Seguridad en producción)
+    # ----------------------------------------------------------------------------
+    # Redirigir HTTP a HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+    # IMPORTANTE: NO forzar www en subdominios
+    # El subdominio corposurgir21-api.corposurgir21.org debe mantenerse tal cual
+
+    # ----------------------------------------------------------------------------
+    # 3. MANEJO DE HEADERS DE AUTORIZACIÓN (Tu código original)
+    # ----------------------------------------------------------------------------
+    # Pasar el header Authorization a PHP (necesario para JWT/Bearer tokens)
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Redirect Trailing Slashes If Not A Folder...
+    # ----------------------------------------------------------------------------
+    # 4. ELIMINAR TRAILING SLASHES (Tu código original)
+    # ----------------------------------------------------------------------------
+    # Redirigir /users/ a /users (normalización de URLs)
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
-    # Handle Front Controller...
+    # ----------------------------------------------------------------------------
+    # 5. FRONT CONTROLLER PATTERN (Tu código original)
+    # ----------------------------------------------------------------------------
+    # Si no es directorio ni archivo, enviar a index.php (Lumen routing)
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# ----------------------------------------------------------------------------
+# 6. SEGURIDAD - PREVENIR ACCESO A ARCHIVOS SENSIBLES
+# ----------------------------------------------------------------------------
+# Prevenir listado de directorios
+Options -Indexes
+
+# Proteger archivos de configuración y sensibles
+<FilesMatch "^\.ht|^\.env|^\.git|composer\.(json|lock)|\.log$|\.sql$|\.sh$|\.md$">
+    Require all denied
+</FilesMatch>
+
+# Bloquear acceso a directorios específicos
+RedirectMatch 403 ^/\.git
+RedirectMatch 403 ^/storage/(?!.*\.(jpg|jpeg|png|gif|svg|pdf|webp))
+RedirectMatch 403 ^/vendor
+RedirectMatch 403 ^/bootstrap/cache
+
+# ----------------------------------------------------------------------------
+# 7. HEADERS DE SEGURIDAD PARA API
+# ----------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    # Prevenir clickjacking (API no se embebe en iframes)
+    Header always set X-Frame-Options "DENY"
+    
+    # Prevenir MIME type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # Prevenir XSS
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Referrer policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # HSTS - Forzar HTTPS por 1 año (solo en producción con SSL)
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    
+    # Content Security Policy para APIs (restrictivo)
+    Header always set Content-Security-Policy "default-src 'none'; frame-ancestors 'none';"
+    
+    # Eliminar headers que revelan información
+    Header unset X-Powered-By
+    Header unset Server
+    
+    # Especificar que es una API JSON
+    <FilesMatch "\.php$">
+        Header set Content-Type "application/json; charset=utf-8"
+    </FilesMatch>
+</IfModule>
+
+# ----------------------------------------------------------------------------
+# 8. CORS (Ya configurado en tu CorsMiddleware, pero respaldo aquí)
+# ----------------------------------------------------------------------------
+# Nota: Tu CorsMiddleware.php maneja CORS dinámicamente
+# Este es solo un respaldo si el middleware falla
+
+<IfModule mod_headers.c>
+    # Permitir OPTIONS (preflight requests)
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Accept, Origin"
+    Header always set Access-Control-Max-Age "86400"
+    
+    # El origen específico se maneja en CorsMiddleware.php
+    # No establecer Access-Control-Allow-Origin aquí para evitar conflictos
+</IfModule>
+
+# ----------------------------------------------------------------------------
+# 9. COMPRESIÓN GZIP (Reducir tamaño de respuestas JSON)
+# ----------------------------------------------------------------------------
+<IfModule mod_deflate.c>
+    # Comprimir respuestas JSON, XML y texto
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/javascript
+</IfModule>
+
+# ----------------------------------------------------------------------------
+# 10. CACHE CONTROL PARA API
+# ----------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    # APIs normalmente NO deben cachearse (datos dinámicos)
+    <FilesMatch "\.(php|json)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
+    
+    # Pero si sirves archivos estáticos desde la API (imágenes, PDFs)
+    <FilesMatch "\.(jpg|jpeg|png|gif|svg|pdf|webp|ico)$">
+        Header set Cache-Control "public, max-age=2592000"
+        # 30 días de cache
+    </FilesMatch>
+</IfModule>
+
+# ----------------------------------------------------------------------------
+# 11. LÍMITES DE SEGURIDAD (Prevenir ataques)
+# ----------------------------------------------------------------------------
+# Limitar tamaño de peticiones (ajusta según tus necesidades)
+LimitRequestBody 10485760
+# 10MB máximo por petición (útil si subes imágenes)
+
+# Timeout para peticiones largas
+<IfModule mod_reqtimeout.c>
+    RequestReadTimeout header=20-40,MinRate=500 body=20,MinRate=500
+</IfModule>
+
+# ----------------------------------------------------------------------------
+# 12. PROTECCIÓN CONTRA ATAQUES COMUNES
+# ----------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+    # Bloquear peticiones con query strings sospechosas
+    RewriteCond %{QUERY_STRING} (<|%3C).*script.*(>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} GLOBALS(=|[|%[0-9A-Z]{0,2}) [OR]
+    RewriteCond %{QUERY_STRING} _REQUEST(=|[|%[0-9A-Z]{0,2}) [OR]
+    RewriteCond %{QUERY_STRING} base64_encode.*\(.*\) [NC,OR]
+    RewriteCond %{QUERY_STRING} (\<|%3C).*iframe.*(\>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} php://input [NC,OR]
+    RewriteCond %{QUERY_STRING} mosConfig_[a-zA-Z_]{1,21}(=|%3D) [OR]
+    RewriteCond %{QUERY_STRING} ^.*(\[|\]|\(|\)|<|>|'|"|;|\?|\*|=$).* [NC]
+    RewriteRule ^(.*)$ - [F,L]
+    
+    # Bloquear user agents maliciosos
+    RewriteCond %{HTTP_USER_AGENT} ^$ [OR]
+    RewriteCond %{HTTP_USER_AGENT} ^(-|curl|wget|python|java|libwww) [NC]
+    RewriteRule ^(.*)$ - [F,L]
+</IfModule>
+
+# ----------------------------------------------------------------------------
+# 13. TIPOS MIME CORRECTOS
+# ----------------------------------------------------------------------------
+<IfModule mod_mime.c>
+    # Asegurar tipo MIME correcto para JSON
+    AddType application/json .json
+    AddType application/xml .xml
+    
+    # Charset UTF-8
+    AddDefaultCharset utf-8
+    AddCharset utf-8 .json .xml .txt
+</IfModule>
+
+# ----------------------------------------------------------------------------
+# 14. DESHABILITAR ETAGS (Redundante con Cache-Control)
+# ----------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    Header unset ETag
+</IfModule>
+FileETag None
+
+# ----------------------------------------------------------------------------
+# 15. PHP CONFIGURATION (Opcional - si tienes acceso)
+# ----------------------------------------------------------------------------
+# Descomentar si necesitas ajustar configuración de PHP
+
+# Tiempo máximo de ejecución (para procesos largos)
+# php_value max_execution_time 60
+
+# Memoria máxima
+# php_value memory_limit 256M
+
+# Tamaño máximo de upload (si permites subir archivos)
+# php_value upload_max_filesize 10M
+# php_value post_max_size 10M
+
+# Desactivar funciones peligrosas
+# php_value disable_functions exec,passthru,shell_exec,system,proc_open,popen
+
+# Logs de errores (solo en desarrollo)
+# php_flag display_errors Off
+# php_flag log_errors On
+# php_value error_log /home/usuario/logs/php_errors.log
+
+# ----------------------------------------------------------------------------
+# 16. PÁGINAS DE ERROR PERSONALIZADAS (Opcional)
+# ----------------------------------------------------------------------------
+# ErrorDocument 403 /index.php
+# ErrorDocument 404 /index.php
+# ErrorDocument 500 /index.php
+
+# Esto hace que Lumen maneje todos los errores con su sistema
