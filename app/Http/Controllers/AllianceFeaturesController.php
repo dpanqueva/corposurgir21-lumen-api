@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AllianceFeatures;
 use App\Traits\ApiResponser;
+use App\Services\CacheService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -13,14 +14,18 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class AllianceFeaturesController extends Controller
 {
     use ApiResponser;
+    protected $cacheService;
 
-    public function __construct(){}
+    public function __construct(CacheService $cacheService)
+    {
+        $this->cacheService = $cacheService;
+    }
 
     public function index()
     {
-        try{
+        try {
             return $this->successResponse(AllianceFeatures::all());
-        }catch (Exception $ex) {
+        } catch (Exception $ex) {
             return $this->errorResponse(
                 'An unexpected error has occurred',
                 Response::HTTP_INTERNAL_SERVER_ERROR
@@ -28,13 +33,14 @@ class AllianceFeaturesController extends Controller
         }
     }
 
-    public function showAlliancesByIdAndName($allianceId,$allianceName){
-        try{
+    public function showAlliancesByIdAndName($allianceId, $allianceName)
+    {
+        try {
             return $this->successResponse(AllianceFeatures::where([
-              ['alianza_id', '=',$allianceId,],
-              ['codigo_nombre','=',$allianceName]
+                ['alianza_id', '=', $allianceId,],
+                ['codigo_nombre', '=', $allianceName]
             ])->get());
-        }catch (Exception $ex) {
+        } catch (Exception $ex) {
             return $this->errorResponse(
                 'An unexpected error has occurred' . $ex,
                 Response::HTTP_INTERNAL_SERVER_ERROR
@@ -46,6 +52,7 @@ class AllianceFeaturesController extends Controller
     {
         try {
             $this->validate($request, $this->rules());
+            $this->cacheService->invalidateType('alliances');
             return $this->successResponse(AllianceFeatures::create($request->all()), Response::HTTP_CREATED);
         } catch (ValidationException $ex) {
             return $this->errorResponse(
@@ -85,6 +92,7 @@ class AllianceFeaturesController extends Controller
                 );
             }
             $alliances->save();
+            $this->cacheService->invalidateType('alliances');
             return $this->successResponse($alliances);
         } catch (ValidationException $ex) {
             return $this->errorResponse(
@@ -109,6 +117,7 @@ class AllianceFeaturesController extends Controller
         try {
             $alliances = AllianceFeatures::findOrFail($allianceId);
             $alliances->delete();
+            $this->cacheService->invalidateType('alliances');
             return $this->successResponse($alliances);
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse(
