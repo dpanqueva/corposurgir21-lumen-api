@@ -124,7 +124,9 @@ class CategoryFeatureController extends BaseController
             'nombre_caracteristica' => 'required|max:50',
             'codigo_nombre' => 'required|max:20',
             'descripcion' => 'required',
-            'categoria_id' => 'required'
+            'categoria_id' => 'required',
+            'bln_cinta_noticia' => 'required',
+            'fe_fin_cinta' => 'required|date',
         ];
     }
 }
