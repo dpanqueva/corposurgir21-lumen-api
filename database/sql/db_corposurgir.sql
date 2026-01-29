@@ -494,6 +494,17 @@ CREATE INDEX ix_usuario_correo ON usuarios(correo);
 CREATE INDEX ix_usuario_token ON usuarios(api_token);
 COMMIT;
 
+--
+-- Añadir nuevos campos a la tabla categoria y categoria_caracteristica
+--
+ALTER TABLE categoria
+ADD COLUMN bln_cinta_noticia TINYINT(1) NOT NULL DEFAULT 0,
+ADD COLUMN fe_fin_cinta DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE categoria_caracteristica
+ADD COLUMN bln_cinta_noticia TINYINT(1) NOT NULL DEFAULT 0,
+ADD COLUMN fe_fin_cinta DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
