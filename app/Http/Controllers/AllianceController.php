@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Alliance;
 use App\Traits\ApiResponser;
+use App\Services\CacheService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -13,15 +14,26 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 class AllianceController extends Controller
 {
     use ApiResponser;
+    protected $cacheService;
 
-    public function __construct()
+    public function __construct(CacheService $cacheService)
     {
+        $this->cacheService = $cacheService;
     }
 
     public function index()
     {
         try {
-            return $this->successResponse(Alliance::all());
+            $cacheKey = 'alliances:all';
+            $alliances = $this->cacheService->remember(
+                $cacheKey,
+                function () {
+                    return Alliance::all();
+                },
+                null,
+                'alliances'
+            );
+            return $this->successResponse($alliances);
         } catch (Exception $ex) {
             return $this->errorResponse(
                 'An unexpected error has occurred',
@@ -38,11 +50,11 @@ class AllianceController extends Controller
                 $fileName = $this->uploadImage($request->file('img_file'));
                 $alliance = $request->all();
                 $alliance['ruta_imagen'] = env('BASE_PATH_IMG_FRONT') . $fileName;
-
+                $this->cacheService->invalidateType('alliances');
                 return $this->successResponse(Alliance::create($alliance), Response::HTTP_CREATED);
-            }else{
+            } else {
                 return $this->errorResponse(
-                   'Error processing image, not found file',
+                    'Error processing image, not found file',
                     Response::HTTP_BAD_REQUEST
                 );
             }
@@ -62,7 +74,16 @@ class AllianceController extends Controller
     public function show($allianceId)
     {
         try {
-            return $this->successResponse(Alliance::findOrFail($allianceId));
+            $cacheKey = "alliances:show:{$allianceId}";
+            $alliances = $this->cacheService->remember(
+                $cacheKey,
+                function () use ($allianceId) {
+                    return Alliance::findOrFail($allianceId);
+                },
+                null,
+                'alliances'
+            );
+            return $this->successResponse($alliances);
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse(
                 'Not found data with parameter ' . $allianceId,
@@ -79,7 +100,16 @@ class AllianceController extends Controller
     public function showDetail($name)
     {
         try {
-            return $this->successResponse(Alliance::where('nombre', $name)->with('caracteristicas')->first());
+            $cacheKey = "alliances:show:{$name}";
+            $alliances = $this->cacheService->remember(
+                $cacheKey,
+                function () use ($name) {
+                    return Alliance::where('nombre', $name)->with('caracteristicas')->first();
+                },
+                null,
+                'alliances'
+            );
+            return $this->successResponse($alliances);
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse(
                 'Not found data with parameter ' . $name,
@@ -106,6 +136,7 @@ class AllianceController extends Controller
                 );
             }
             $alliances->save();
+            $this->forgetCache($allianceId);
             return $this->successResponse($alliances);
         } catch (ValidationException $ex) {
             return $this->errorResponse(
@@ -131,6 +162,7 @@ class AllianceController extends Controller
             $alliances = Alliance::findOrFail($allianceId);
             $this->deleteImage($alliances->ruta_imagen);
             $alliances->delete();
+            $this->forgetCache($allianceId);
             return $this->successResponse($alliances);
         } catch (ModelNotFoundException $e) {
             return $this->errorResponse(
@@ -155,6 +187,7 @@ class AllianceController extends Controller
                 $this->deleteImage($alliances->ruta_imagen);
                 $alliances->ruta_imagen = env('BASE_PATH_IMG_FRONT') . $fileName;
                 $alliances->save();
+                $this->forgetCache($allianceId);
                 return $this->successResponse($alliances);
             }
         } catch (ModelNotFoundException $e) {
@@ -206,9 +239,16 @@ class AllianceController extends Controller
             'nombre' => 'required|max:50',
             'descripcion' => 'required',
             'ruta_imagen' => 'required',
-            'pagina_web'=> 'required',
-            'direccion'=> 'required',
-            'barrio'=> 'required'
+            'pagina_web' => 'required',
+            'direccion' => 'required',
+            'barrio' => 'required'
         ];
+    }
+
+    private function forgetCache($id)
+    {
+        $this->cacheService->forget("alliances:show:$id");
+        $this->cacheService->forget('alliances:all');
+        $this->cacheService->invalidateType('alliances');
     }
 }

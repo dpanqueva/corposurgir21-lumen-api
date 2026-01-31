@@ -21,6 +21,8 @@ class CategoryFeature extends Model{
         'codigo_nombre',
         'nombre_caracteristica',
         'categoria_id',
+        'bln_cinta_noticia',
+        'fe_fin_cinta'
     ];
 
     public function category(){

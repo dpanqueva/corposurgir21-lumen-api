@@ -23,6 +23,8 @@ class Category extends Model{
         'snactivo',
         'logo',
         'descripcion',
+        'bln_cinta_noticia',
+        'fe_fin_cinta'
     ];
 
     public function caracteristicas(){

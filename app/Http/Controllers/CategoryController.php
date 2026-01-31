@@ -139,7 +139,9 @@ class CategoryController extends Controller
             'nombre' => 'required|max:50',
             'codigo' => 'required|max:20',
             'descripcion' => 'required',
-            'logo' => 'required|max:100'
+            'logo' => 'required|max:100',
+            'bln_cinta_noticia' => 'required',
+            'fe_fin_cinta' => 'required|date',
         ];
     }
 }
